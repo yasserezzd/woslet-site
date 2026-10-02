@@ -7,6 +7,18 @@
   <meta name="description" content="Woslet: order from local stores in South Lebanon, delivered. Help, contact and policies.">
   <link rel="icon" href="icon.png">
   <link rel="stylesheet" href="style.css">
+  <script>
+    // Email links that land on the home page (an older email, or Supabase
+    // falling back to the site address) go on to the page that handles them.
+    (function () {
+      var hash = location.hash, query = location.search;
+      var all = hash + "&" + query;
+      if (!/access_token=|token_hash=|error_code=|[?&]code=/.test(all)) return;
+      var signup = /type=(signup|email|invite)/.test(all);
+      var page = /type=recovery/.test(all) || !signup ? "reset-password.html" : "confirmed.html";
+      location.replace(page + query + hash);
+    })();
+  </script>
 </head>
 <body>
   <header class="site">

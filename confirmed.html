@@ -33,24 +33,28 @@
     );
     const status = document.getElementById("status");
 
+    function done(ok) {
+      status.textContent = ok
+        ? "Your email is confirmed! · تم تأكيد بريدك الإلكتروني!"
+        : "This link has expired or was already used. Try signing in; if that fails, sign up again. · انتهت صلاحية الرابط أو استُخدم من قبل. جرّب تسجيل الدخول، وإن لم ينجح سجّل من جديد.";
+      status.className = "status " + (ok ? "ok" : "err");
+    }
+
+    // Supabase confirms the address before sending people here, then adds
+    // tokens or a code (nothing more to do) or an error; a custom email
+    // template sends a token_hash to verify here instead.
     async function confirmEmail() {
-      const params = new URLSearchParams(location.search);
-      const tokenHash = params.get("token_hash");
-      const type = params.get("type") || "email";
-      if (!tokenHash) {
-        status.textContent = "This link is incomplete. · الرابط غير مكتمل.";
-        status.className = "status err";
-        return;
-      }
-      const { error } = await client.auth.verifyOtp({ token_hash: tokenHash, type });
-      if (error) {
-        status.textContent = "This link has expired or was already used. If you can't sign in, sign up again or contact us. · انتهت صلاحية الرابط أو استُخدم من قبل.";
-        status.className = "status err";
-        return;
-      }
+      const query = new URLSearchParams(location.search);
+      const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
+      history.replaceState(null, "", location.pathname);
+      if (hash.get("error") || query.get("error")) return done(false);
+      if (hash.get("access_token") || query.get("code")) return done(true);
+      const tokenHash = query.get("token_hash");
+      if (!tokenHash) return done(false);
+      const { error } = await client.auth.verifyOtp({ token_hash: tokenHash, type: query.get("type") || "email" });
+      if (error) return done(false);
       await client.auth.signOut();
-      status.textContent = "Your email is confirmed! · تم تأكيد بريدك الإلكتروني!";
-      status.className = "status ok";
+      done(true);
     }
 
     confirmEmail();
