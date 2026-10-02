@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Confirm Your Woslet Email</title>
+  <link rel="icon" href="icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site">
+    <div class="inner">
+      <a class="brand" href="./"><img src="icon.png" alt="">Woslet</a>
+      <h1>Confirm your email</h1>
+      <p>تأكيد البريد الإلكتروني</p>
+    </div>
+  </header>
+  <main>
+    <section class="card">
+      <p id="status" class="status">Confirming… · جارٍ التأكيد…</p>
+      <p class="muted">Go back to the Woslet app and sign in with your email and password.<br>
+        ارجع إلى تطبيق وصلت وسجّل الدخول ببريدك وكلمة المرور.</p>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js"></script>
+  <script>
+    // The sign-up email links here with a one-time token that confirms the address.
+    const client = supabase.createClient(
+      "https://ofczwoccuhzrwqhoblqu.supabase.co",
+      "sb_publishable_u0erLQbuooHpQDW-SArScg_CzIm9tC6",
+      { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
+    );
+    const status = document.getElementById("status");
+
+    async function confirmEmail() {
+      const params = new URLSearchParams(location.search);
+      const tokenHash = params.get("token_hash");
+      const type = params.get("type") || "email";
+      if (!tokenHash) {
+        status.textContent = "This link is incomplete. · الرابط غير مكتمل.";
+        status.className = "status err";
+        return;
+      }
+      const { error } = await client.auth.verifyOtp({ token_hash: tokenHash, type });
+      if (error) {
+        status.textContent = "This link has expired or was already used. If you can't sign in, sign up again or contact us. · انتهت صلاحية الرابط أو استُخدم من قبل.";
+        status.className = "status err";
+        return;
+      }
+      await client.auth.signOut();
+      status.textContent = "Your email is confirmed! · تم تأكيد بريدك الإلكتروني!";
+      status.className = "status ok";
+    }
+
+    confirmEmail();
+  </script>
+</body>
+</html>
